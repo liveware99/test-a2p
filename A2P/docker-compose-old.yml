@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:80"  # Map port 8000 on the host to port 80 in the container
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./A2P:/A2P
+    expose:
+      - "80"  # Expose port 80 on the container
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]

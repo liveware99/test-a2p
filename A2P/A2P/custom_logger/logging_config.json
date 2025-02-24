@@ -1,0 +1,6 @@
+{
+  "log_file": "A2PFW_log",
+  "rotation_when": "S",
+  "rotation_interval": 300,
+  "backup_count": 1000
+}
