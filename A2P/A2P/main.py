@@ -118,66 +118,14 @@ app = FastAPI(lifespan=app_lifespan)
 
 # APi Endpoints
 
-# Global variable to store last 5 total_time values
-last_5_total_times = deque(maxlen=5)
-
-@app.post("/compare")
-async def compare_content(request: Request, background_tasks: BackgroundTasks):
-    global last_5_total_times
-    start_time = time.time()
-    
-    try:
-        # Parse JSON data from the request
-        json_data = await request.json()
-        json_data_time = time.time()
-
-        msg_content = json_data['Content']
-        operator_name = int(json_data["OperatorId"])
-
-        start_emb_time = time.time()
-        given_embedding = model.encode(msg_content, convert_to_numpy=True)
-        end_emb_time = time.time()
-
-        block_label, block_index = content_processing(
-            msg_content, given_embedding, operator_name, db_embeddings,
-            block_arr, operator_detect_dict, operator_auto_train_dict, 
-            operator_order_arr, background_tasks
-        )
-
-        end_time = time.time()
-        total_time = (end_time - start_time) * 1000  # Convert to milliseconds
-
-        # Store total_time in deque (maintains last 5 values)
-        last_5_total_times.append(total_time)
-
-        # Compute average of last 5 messages
-        avg_total_time = sum(last_5_total_times) / len(last_5_total_times)
-
-        log_message = (
-            f"JSON Read Time: {-(start_time-json_data_time)*1000:.2f} ms, "
-            f"Embedding Time: {-(start_emb_time-end_emb_time)*1000:.2f} ms, "
-            f"Numpy Operation Time: {-(end_emb_time-end_time)*1000:.2f} ms, "
-            f"Computation Time: {-(start_emb_time-end_time)*1000:.2f} ms, "
-            f"Compare Total Time: {total_time:.2f} ms, "
-            f"Avg Total Time (Last 5): {avg_total_time:.2f} ms"
-        )
-
-        logger.info(log_message)
-
-        if block_label == 'Pass':
-            logger.info(f'Passed the content - {msg_content} - Operator {operator_name}')
-            return '0'
-        else:
-            logger.info(f'Blocked the content - {msg_content} - Operator {operator_name}')
-            return '1'
-
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+# # Global variable to store last 5 total_time values
+# last_5_total_times = deque(maxlen=5)
 
 # @app.post("/compare")
 # async def compare_content(request: Request, background_tasks: BackgroundTasks):
+#     global last_5_total_times
 #     start_time = time.time()
+    
 #     try:
 #         # Parse JSON data from the request
 #         json_data = await request.json()
@@ -187,42 +135,94 @@ async def compare_content(request: Request, background_tasks: BackgroundTasks):
 #         operator_name = int(json_data["OperatorId"])
 
 #         start_emb_time = time.time()
-
 #         given_embedding = model.encode(msg_content, convert_to_numpy=True)
 #         end_emb_time = time.time()
 
-#         block_label, block_index = content_processing(msg_content, given_embedding, operator_name, db_embeddings,
-#                                                       block_arr, operator_detect_dict, operator_auto_train_dict, operator_order_arr, background_tasks)
+#         block_label, block_index = content_processing(
+#             msg_content, given_embedding, operator_name, db_embeddings,
+#             block_arr, operator_detect_dict, operator_auto_train_dict, 
+#             operator_order_arr, background_tasks
+#         )
 
 #         end_time = time.time()
-#         json_read_time = -(start_time-json_data_time)*1000
-#         embedding_time = -(start_emb_time-end_emb_time)*1000
-#         numpy_operation_time = -(end_emb_time-end_time)*1000
-#         computation_time = -(start_emb_time-end_time)*1000
-#         total_time = -(start_time-end_time)*1000
+#         total_time = (end_time - start_time) * 1000  # Convert to milliseconds
+
+#         # Store total_time in deque (maintains last 5 values)
+#         last_5_total_times.append(total_time)
+
+#         # Compute average of last 5 messages
+#         avg_total_time = sum(last_5_total_times) / len(last_5_total_times)
 
 #         log_message = (
-#             f"JSON Read Time: {json_read_time:.2f} ms, "
-#             f"Embedding Time: {embedding_time:.2f} ms, "
-#             f"Numpy Operation Time: {numpy_operation_time:.2f} ms, "
-#             f"Computation Time: {computation_time:.2f} ms, "
-#             f"Compare Total Time: {total_time:.2f} ms"
+#             f"JSON Read Time: {-(start_time-json_data_time)*1000:.2f} ms, "
+#             f"Embedding Time: {-(start_emb_time-end_emb_time)*1000:.2f} ms, "
+#             f"Numpy Operation Time: {-(end_emb_time-end_time)*1000:.2f} ms, "
+#             f"Computation Time: {-(start_emb_time-end_time)*1000:.2f} ms, "
+#             f"Compare Total Time: {total_time:.2f} ms, "
+#             f"Avg Total Time (Last 5): {avg_total_time:.2f} ms"
 #         )
 
 #         logger.info(log_message)
 
 #         if block_label == 'Pass':
-#             logger.info(
-#                 f'Passed the content - {msg_content} - Operator {operator_name}')
+#             logger.info(f'Passed the content - {msg_content} - Operator {operator_name}')
 #             return '0'
 #         else:
-#             logger.info(
-#                 f'Blocked the content - {msg_content} - Operator {operator_name}')
+#             logger.info(f'Blocked the content - {msg_content} - Operator {operator_name}')
 #             return '1'
 
 #     except Exception as e:
 #         logger.error(f"Error: {e}")
 #         raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/compare")
+async def compare_content(request: Request, background_tasks: BackgroundTasks):
+    start_time = time.time()
+    try:
+        # Parse JSON data from the request
+        json_data = await request.json()
+        json_data_time = time.time()
+
+        msg_content = json_data['Content']
+        operator_name = int(json_data["OperatorId"])
+
+        start_emb_time = time.time()
+
+        given_embedding = model.encode(msg_content, convert_to_numpy=True)
+        end_emb_time = time.time()
+
+        block_label, block_index = content_processing(msg_content, given_embedding, operator_name, db_embeddings,
+                                                      block_arr, operator_detect_dict, operator_auto_train_dict, operator_order_arr, background_tasks)
+
+        end_time = time.time()
+        json_read_time = -(start_time-json_data_time)*1000
+        embedding_time = -(start_emb_time-end_emb_time)*1000
+        numpy_operation_time = -(end_emb_time-end_time)*1000
+        computation_time = -(start_emb_time-end_time)*1000
+        total_time = -(start_time-end_time)*1000
+
+        log_message = (
+            f"JSON Read Time: {json_read_time:.2f} ms, "
+            f"Embedding Time: {embedding_time:.2f} ms, "
+            f"Numpy Operation Time: {numpy_operation_time:.2f} ms, "
+            f"Computation Time: {computation_time:.2f} ms, "
+            f"Compare Total Time: {total_time:.2f} ms"
+        )
+
+        logger.info(log_message)
+
+        if block_label == 'Pass':
+            logger.info(
+                f'Passed the content - {msg_content} - Operator {operator_name}')
+            return '0'
+        else:
+            logger.info(
+                f'Blocked the content - {msg_content} - Operator {operator_name}')
+            return '1'
+
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/operator_update")
