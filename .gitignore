@@ -1,0 +1,17 @@
+# Ignore Python cache
+*.__pycache__/
+*.gitkeep
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.__pycache__/
+
+# Ignore virtual environments
+*.venv
+
+# Ignore log files
+.logs/
+*.log
+.custom_logger/
+/A2P/A2P/__pycache__

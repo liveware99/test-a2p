@@ -1,0 +1,6 @@
+{
+    "auto_emb_df_update_cutoff": 0.95,
+    "in_memory_df_refresh_interval": 5,
+    "auto_emb_db_sync_interval": 10
+  }
+  
